@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabinet de Pédiatrie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Cabinet de Pédiatrie</h1>
+
+<!-- Formulaire pour ajouter une nouvelle fiche patient -->
+<form id="patientForm">
+    <label for="nom">Nom:</label>
+    <input type="text" id="nom" name="nom" required>
+
+    <label for="prenom">Prénom:</label>
+    <input type="text" id="prenom" name="prenom" required>
+
+    <label for="dateNaissance">Date de Naissance:</label>
+    <input type="date" id="dateNaissance" name="dateNaissance" required>
+
+    <label for="diagnostique">Diagnostic:</label>
+    <textarea id="diagnostique" name="diagnostique" rows="4" required></textarea>
+
+    <label for="traitement">Traitement:</label>
+    <textarea id="traitement" name="traitement" rows="4" required></textarea>
+
+    <label for="remarque">Remarque:</label>
+    <textarea id="remarque" name="remarque" rows="4"></textarea>
+
+    <label for="photo">Télécharger une photo:</label>
+    <input type="file" id="photo" name="photo" accept="image/*">
+
+    <button type="button" onclick="enregistrerFiche()">Enregistrer</button>
+</form>
+
+<!-- Liste des fiches patients -->
+<h2>Liste des Patients</h2>
+<ul id="listePatients">
+    <!-- Les fiches patients seront ajoutées dynamiquement ici -->
+</ul>
+
+<!-- Script JavaScript pour gérer l'enregistrement et l'affichage des fiches -->
+<script>
+    // Charger les fiches existantes depuis le localStorage au chargement de la page
+    window.onload = function () {
+        var fichesExistantes = JSON.parse(localStorage.getItem('fichesPatients')) || [];
+        var listePatientsElement = document.getElementById("listePatients");
+
+        // Ajouter les fiches existantes à la liste
+        fichesExistantes.forEach(function (fichePatient) {
+            ajouterFicheALaListe(fichePatient, listePatientsElement);
+        });
+    };
+
+    function enregistrerFiche() {
+        // Récupérer les données du formulaire
+        var nom = document.getElementById("nom").value;
+        var prenom = document.getElementById("prenom").value;
+        var dateNaissance = document.getElementById("dateNaissance").value;
+        var diagnostique = document.getElementById("diagnostique").value;
+        var traitement = document.getElementById("traitement").value;
+        var remarque = document.getElementById("remarque").value;
+
+        // Charger les fiches existantes depuis le localStorage
+        var fichesExistantes = JSON.parse(localStorage.getItem('fichesPatients')) || [];
+
+        // Vérifier si une fiche avec le même nom et prénom existe déjà
+        var ficheExistante = fichesExistantes.find(function (fiche) {
+            return fiche.nom === nom && fiche.prenom === prenom;
+        });
+
+        if (ficheExistante) {
+            // Mettre à jour la fiche existante avec les nouvelles données
+            ficheExistante.dateNaissance = dateNaissance;
+            ficheExistante.diagnostique = diagnostique;
+            ficheExistante.traitement = traitement;
+            ficheExistante.remarque = remarque;
+        } else {
+            // Créer une nouvelle fiche si elle n'existe pas
+            var nouvelleFiche = {
+                nom: nom,
+                prenom: prenom,
+                dateNaissance: dateNaissance,
+                diagnostique: diagnostique,
+                traitement: traitement,
+                remarque: remarque
+            };
+
+            fichesExistantes.push(nouvelleFiche);
+            // Ajouter la fiche à la liste des patients
+            ajouterFicheALaListe(nouvelleFiche, document.getElementById("listePatients"));
+        }
+
+        // Mettre à jour les fiches dans le localStorage
+        localStorage.setItem('fichesPatients', JSON.stringify(fichesExistantes));
+
+        // Réinitialiser le formulaire
+        document.getElementById("patientForm").reset();
+    }
+
+    function ajouterFicheALaListe(fichePatient, listePatientsElement) {
+        var nouvelleFiche = document.createElement("li");
+        nouvelleFiche.textContent = fichePatient.nom + ", " + fichePatient.prenom;
+
+        // Enregistrement des données JSON dans l'attribut data
+        nouvelleFiche.setAttribute("data-fiche", JSON.stringify(fichePatient));
+
+        // Ajouter un gestionnaire d'événements pour afficher la fiche détaillée au clic
+        nouvelleFiche.addEventListener("click", afficherFiche);
+
+        // Ajouter la nouvelle fiche à la liste
+        listePatientsElement.appendChild(nouvelleFiche);
+    }
+
+    function afficherFiche(event) {
+        // Récupérer les données JSON à partir de l'attribut data
+        var fichePatient = JSON.parse(event.currentTarget.getAttribute("data-fiche"));
+
+        // Afficher les données dans une fenêtre modale ou un élément de la page
+        var contenuFiche = "Nom: " + fichePatient.nom +
+            "\nPrénom: " + fichePatient.prenom +
+            "\nDate de Naissance: " + fichePatient.dateNaissance +
+            "\nDiagnostic: " + fichePatient.diagnostique +
+            "\nTraitement: " + fichePatient.traitement +
+            "\nRemarque: " + fichePatient.remarque;
+
+        // Demander à l'utilisateur s'il souhaite modifier les données
+        var confirmation = confirm("Voulez-vous modifier les données de la fiche?\n\n" + contenuFiche);
+
+        // Si l'utilisateur souhaite modifier, afficher le formulaire avec les données existantes
+        if (confirmation) {
+            document.getElementById("nom").value = fichePatient.nom;
+            document.getElementById("prenom").value = fichePatient.prenom;
+            document.getElementById("dateNaissance").value = fichePatient.dateNaissance;
+            document.getElementById("diagnostique").value = fichePatient.diagnostique;
+            document.getElementById("traitement").value = fichePatient.traitement;
+            document.getElementById("remarque").value = fichePatient.remarque;
+
+            // Supprimer la fiche existante de la liste
+            event.currentTarget.remove();
+        }
+    }
+</script>
+
+</body>
+</html>
